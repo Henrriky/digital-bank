@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id            String @id @default(uuid())
+  name          String
+  email         String @unique
+  cpf_hash      String
+  password_hash String
+  city          String
+  state         String
+  zip_code      String
+  phone         String
+
+  created_at DateTime  @default(now())
+  Account    Account[]
+
+  @@map("client")
+}
+
+model Account {
+  id              String      @id @default(uuid())
+  current_balance Decimal
+  account_type_id String
+  account_type    AccountType @relation(fields: [account_type_id], references: [id])
+  account_status  String
+  client_id       String
+  client          Client      @relation(fields: [client_id], references: [id])
+  created_at      DateTime    @default(now())
+  cards           Card[]
+  transfers_from  Transfer[]  @relation("account_from")
+  transfers_to    Transfer[]  @relation("account_to")
+
+  @@map("account")
+}
+
+model AccountType {
+  id          String    @id @default(uuid())
+  description String
+  Account     Account[]
+
+  @@map("account_type")
+}
+
+model Transfer {
+  id              String  @id @default(uuid())
+  account_id_from String
+  account_from    Account @relation("account_from", fields: [account_id_from], references: [id])
+  account_id_to   String
+  account_to      Account @relation("account_to", fields: [account_id_to], references: [id])
+
+  transaction    Transaction @relation(fields: [transaction_id], references: [id])
+  transaction_id String      @unique
+  created_at     DateTime    @default(now())
+
+  @@map("transfer")
+}
+
+model Transaction {
+  id String @id @default(uuid())
+
+  amount              Decimal
+  transaction_type    TransactionType @relation(fields: [transaction_type_id], references: [id])
+  transaction_type_id String
+  transfer            Transfer?
+
+  @@map("transaction")
+}
+
+model TransactionType {
+  id          String        @id @default(uuid())
+  description String
+  Transaction Transaction[]
+
+  @@map("transaction_type")
+}
+
+model Card {
+  id               String   @id @default(uuid())
+  account          Account  @relation(fields: [account_id], references: [id])
+  account_id       String
+  cardholder_name  String
+  card_number_hash String
+  expiration_date  DateTime
+  cvc              Int
+
+  @@map("card")
+}
