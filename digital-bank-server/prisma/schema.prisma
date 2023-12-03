@@ -21,10 +21,20 @@ model Client {
   zip_code      String
   phone         String
 
-  created_at DateTime  @default(now())
-  Account    Account[]
+  created_at    DateTime  @default(now())
+  Account       Account[]
+  token         Token?
 
   @@map("client")
+}
+
+model Token {
+  id            String @id @default(uuid())
+  token         String
+  exp           DateTime
+
+  client_id     String @unique
+  client Client @relation(fields: [client_id], references: [id])
 }
 
 model Account {
